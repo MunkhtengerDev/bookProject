@@ -1,3 +1,4 @@
+const { ObjectId } = require("mongodb");
 const bookModel = require("../models/bookModel");
 const userModel = require("../models/userModel")
 
@@ -85,6 +86,40 @@ exports.saveCommentController = async (req, res) => {
         return res.status(500).json({ message: 'Internal Server Error' });
     }
 };
+
+
+exports.deleteCommentController = async (req, res) => {
+    const { id, commentId } = req.params;
+
+    try {
+        const book = await bookModel.findById(id);
+        if (!book) {
+            return res.status(404).json({ message: 'Book not found' });
+        }
+
+        // Find the index of the comment in the comments array
+        const commentIndex = book.comments.findIndex(comment => comment._id.toString() === commentId);
+
+        // Check if the comment exists
+        if (commentIndex === -1) {
+            return res.status(404).json({ message: 'Comment not found' });
+        }
+
+        // Remove the comment from the comments array
+        book.comments.splice(commentIndex, 1);
+
+        // Save the updated book document
+        await book.save();
+
+        // Return a success response
+        return res.status(200).json({ message: 'Comment deleted successfully' });
+    } catch (error) {
+        // Handle errors and return an error response
+        console.error('Error deleting comment:', error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
 
 
 exports.saveRatingController = async (req, res) => {
@@ -241,8 +276,4 @@ exports.saveReviewCommentController = async (req, res) => {
     }
 };
 
-
-
-
-  
 
